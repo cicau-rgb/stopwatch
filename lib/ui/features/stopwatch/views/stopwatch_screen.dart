@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stopwatch_app/core/theme/app_theme.dart';
 import 'package:stopwatch_app/ui/features/stopwatch/view_models/stopwatch_view_model.dart';
 import 'widgets/digital_display.dart';
+import 'widgets/lap_list_view.dart';
 import 'widgets/stopwatch_controls.dart';
 
 class StopwatchScreen extends StatefulWidget {
@@ -50,7 +51,7 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
             return Column(
               children: [
                 const Padding(
-                  padding: EdgeInsets.only(top: 24.0, bottom: 8.0),
+                  padding: EdgeInsets.only(top: 20.0, bottom: 8.0),
                   child: Text(
                     'STOPWATCH',
                     style: TextStyle(
@@ -61,18 +62,20 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
                     ),
                   ),
                 ),
-                Expanded(
-                  child: Center(
-                    child: DigitalDisplay(
-                      minutes: _viewModel.formattedMinutes,
-                      seconds: _viewModel.formattedSeconds,
-                      hundredths: _viewModel.formattedHundredths,
-                    ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24.0),
+                  child: DigitalDisplay(
+                    minutes: _viewModel.formattedMinutes,
+                    seconds: _viewModel.formattedSeconds,
+                    hundredths: _viewModel.formattedHundredths,
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 48.0),
+                  padding: const EdgeInsets.only(bottom: 20.0),
                   child: StopwatchControls(viewModel: _viewModel),
+                ),
+                Expanded(
+                  child: LapListView(viewModel: _viewModel),
                 ),
               ],
             );

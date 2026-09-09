@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import '../models/lap.dart';
 
 enum StopwatchStatus {
   initial,
@@ -17,6 +18,7 @@ class StopwatchViewModel extends ChangeNotifier {
   final Duration tickInterval;
   Timer? _timer;
   StopwatchStatus _status = StopwatchStatus.initial;
+  final List<Lap> _laps = [];
 
   StopwatchStatus get status => _status;
 
@@ -27,6 +29,46 @@ class StopwatchViewModel extends ChangeNotifier {
   bool get isInitial => _status == StopwatchStatus.initial;
 
   Duration get elapsed => _stopwatch.elapsed;
+
+  List<Lap> get laps => List.unmodifiable(_laps);
+
+  Lap? get currentLap {
+    if (isInitial) return null;
+
+    final prevTotal = _laps.isEmpty ? Duration.zero : _laps.first.totalElapsed;
+    final currentTotal = elapsed;
+    final currentDuration = currentTotal >= prevTotal
+        ? currentTotal - prevTotal
+        : Duration.zero;
+
+    return Lap(
+      lapNumber: _laps.length + 1,
+      lapDuration: currentDuration,
+      totalElapsed: currentTotal,
+    );
+  }
+
+  int? get fastestLapNumber {
+    if (_laps.length < 2) return null;
+    Lap fastest = _laps.first;
+    for (final lap in _laps) {
+      if (lap.lapDuration < fastest.lapDuration) {
+        fastest = lap;
+      }
+    }
+    return fastest.lapNumber;
+  }
+
+  int? get slowestLapNumber {
+    if (_laps.length < 2) return null;
+    Lap slowest = _laps.first;
+    for (final lap in _laps) {
+      if (lap.lapDuration > slowest.lapDuration) {
+        slowest = lap;
+      }
+    }
+    return slowest.lapNumber;
+  }
 
   String get formattedMinutes {
     final minutes = elapsed.inMinutes;
@@ -70,12 +112,32 @@ class StopwatchViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void recordLap() {
+    if (!isRunning) return;
+
+    final prevTotal = _laps.isEmpty ? Duration.zero : _laps.first.totalElapsed;
+    final currentTotal = elapsed;
+    final lapDuration = currentTotal >= prevTotal
+        ? currentTotal - prevTotal
+        : Duration.zero;
+
+    final lap = Lap(
+      lapNumber: _laps.length + 1,
+      lapDuration: lapDuration,
+      totalElapsed: currentTotal,
+    );
+
+    _laps.insert(0, lap);
+    notifyListeners();
+  }
+
   void reset() {
     _stopwatch.stop();
     _stopwatch.reset();
     _timer?.cancel();
     _timer = null;
     _status = StopwatchStatus.initial;
+    _laps.clear();
     notifyListeners();
   }
 

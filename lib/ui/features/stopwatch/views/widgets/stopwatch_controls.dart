@@ -13,8 +13,38 @@ class StopwatchControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isRunning = viewModel.isRunning;
+    final isPaused = viewModel.isPaused;
     final isInitial = viewModel.isInitial;
-    final canReset = !isInitial && !isRunning;
+
+    final String leftLabel;
+    final VoidCallback? leftOnTap;
+    final Color leftBackground;
+    final Color leftTextColor;
+    final Color leftBorderColor;
+    final Key leftKey;
+
+    if (isRunning) {
+      leftLabel = 'Lap';
+      leftOnTap = viewModel.recordLap;
+      leftBackground = AppTheme.resetBackground;
+      leftTextColor = AppTheme.resetAccent;
+      leftBorderColor = AppTheme.surfaceElevated;
+      leftKey = const Key('lap_button');
+    } else if (isPaused) {
+      leftLabel = 'Reset';
+      leftOnTap = viewModel.reset;
+      leftBackground = AppTheme.resetBackground;
+      leftTextColor = AppTheme.resetAccent;
+      leftBorderColor = AppTheme.surfaceElevated;
+      leftKey = const Key('reset_button');
+    } else {
+      leftLabel = 'Lap';
+      leftOnTap = null;
+      leftBackground = AppTheme.surface.withValues(alpha: 0.5);
+      leftTextColor = AppTheme.textMuted;
+      leftBorderColor = Colors.transparent;
+      leftKey = const Key('lap_button_disabled');
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -22,16 +52,12 @@ class StopwatchControls extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _ControlButton(
-            key: const Key('reset_button'),
-            label: 'Reset',
-            onTap: canReset ? viewModel.reset : null,
-            backgroundColor: canReset
-                ? AppTheme.resetBackground
-                : AppTheme.surface.withValues(alpha: 0.5),
-            textColor: canReset ? AppTheme.resetAccent : AppTheme.textMuted,
-            borderColor: canReset
-                ? AppTheme.surfaceElevated
-                : Colors.transparent,
+            key: leftKey,
+            label: leftLabel,
+            onTap: leftOnTap,
+            backgroundColor: leftBackground,
+            textColor: leftTextColor,
+            borderColor: leftBorderColor,
           ),
           if (isRunning)
             _ControlButton(
