@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:stopwatch_app/core/theme/app_theme.dart';
 import 'package:stopwatch_app/ui/features/stopwatch/view_models/stopwatch_view_model.dart';
 
-/// Minimalist action controls for Start, Pause, Resume, and Reset.
 class StopwatchControls extends StatelessWidget {
   const StopwatchControls({
     super.key,
@@ -22,7 +21,6 @@ class StopwatchControls extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Reset Button
           _ControlButton(
             key: const Key('reset_button'),
             label: 'Reset',
@@ -35,8 +33,6 @@ class StopwatchControls extends StatelessWidget {
                 ? AppTheme.surfaceElevated
                 : Colors.transparent,
           ),
-
-          // Start / Pause / Resume Button
           if (isRunning)
             _ControlButton(
               key: const Key('pause_button'),

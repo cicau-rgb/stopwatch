@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stopwatch_app/core/theme/app_theme.dart';
 
-/// Digital clock display rendering minutes, seconds, and milliseconds/hundredths
-/// with tabular figures to eliminate jitter.
 class DigitalDisplay extends StatelessWidget {
   const DigitalDisplay({
     super.key,
@@ -26,7 +24,6 @@ class DigitalDisplay extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.baseline,
           textBaseline: TextBaseline.alphabetic,
           children: [
-            // Minutes : Seconds
             Text(
               '$minutes:$seconds',
               style: const TextStyle(
@@ -37,7 +34,6 @@ class DigitalDisplay extends StatelessWidget {
                 fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
-            // Milliseconds (Hundredths) Separator & Digits
             Text(
               '.$hundredths',
               style: const TextStyle(

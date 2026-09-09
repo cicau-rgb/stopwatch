@@ -4,7 +4,6 @@ import 'package:stopwatch_app/ui/features/stopwatch/view_models/stopwatch_view_m
 import 'widgets/digital_display.dart';
 import 'widgets/stopwatch_controls.dart';
 
-/// Main screen for the minimalist stopwatch.
 class StopwatchScreen extends StatefulWidget {
   const StopwatchScreen({
     super.key,
@@ -50,7 +49,6 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
           builder: (context, _) {
             return Column(
               children: [
-                // Top App Bar / Header
                 const Padding(
                   padding: EdgeInsets.only(top: 24.0, bottom: 8.0),
                   child: Text(
@@ -63,8 +61,6 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
                     ),
                   ),
                 ),
-
-                // Center Digital Time Display
                 Expanded(
                   child: Center(
                     child: DigitalDisplay(
@@ -74,8 +70,6 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
                     ),
                   ),
                 ),
-
-                // Bottom Action Controls
                 Padding(
                   padding: const EdgeInsets.only(bottom: 48.0),
                   child: StopwatchControls(viewModel: _viewModel),

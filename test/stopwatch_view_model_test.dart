@@ -127,14 +127,12 @@ void main() {
       final fakeStopwatch = FakeStopwatch();
       final vm = StopwatchViewModel(stopwatch: fakeStopwatch);
 
-      // 0ms
       fakeStopwatch.setElapsed(Duration.zero);
       expect(vm.formattedMinutes, equals('00'));
       expect(vm.formattedSeconds, equals('00'));
       expect(vm.formattedHundredths, equals('00'));
       expect(vm.fullFormattedTime, equals('00:00.00'));
 
-      // 590ms
       fakeStopwatch.setElapsed(const Duration(milliseconds: 590));
       expect(vm.formattedMinutes, equals('00'));
       expect(vm.formattedSeconds, equals('00'));
@@ -142,7 +140,6 @@ void main() {
       expect(vm.formattedMilliseconds, equals('590'));
       expect(vm.fullFormattedTime, equals('00:00.59'));
 
-      // 1 minute, 5 seconds, 430 milliseconds
       fakeStopwatch.setElapsed(
         const Duration(minutes: 1, seconds: 5, milliseconds: 430),
       );
@@ -151,7 +148,6 @@ void main() {
       expect(vm.formattedHundredths, equals('43'));
       expect(vm.fullFormattedTime, equals('01:05.43'));
 
-      // 72 minutes, 12 seconds, 90 milliseconds
       fakeStopwatch.setElapsed(
         const Duration(minutes: 72, seconds: 12, milliseconds: 90),
       );
