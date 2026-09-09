@@ -17,7 +17,6 @@ void main() {
     testWidgets('renders initial 00:00.00 display and controls', (tester) async {
       await tester.pumpWidget(createTestWidget());
 
-      expect(find.text('STOPWATCH'), findsOneWidget);
       expect(find.text('00:00'), findsOneWidget);
       expect(find.text('.00'), findsOneWidget);
       expect(find.text('Start'), findsOneWidget);

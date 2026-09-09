@@ -54,18 +54,7 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.only(top: 20.0, bottom: 8.0),
-              child: Text(
-                'STOPWATCH',
-                style: TextStyle(
-                  color: AppTheme.textMuted,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 3.0,
-                ),
-              ),
-            ),
+            const SizedBox(height: 16.0),
             SizedBox(
               height: 240.0,
               child: PageView(
