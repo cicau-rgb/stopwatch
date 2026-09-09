@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stopwatch_app/core/theme/app_theme.dart';
 import 'package:stopwatch_app/ui/features/stopwatch/views/stopwatch_screen.dart';
+import 'package:stopwatch_app/ui/features/stopwatch/views/widgets/analog_display.dart';
+import 'package:stopwatch_app/ui/features/stopwatch/views/widgets/digital_display.dart';
 
 void main() {
   Widget createTestWidget() {
@@ -56,6 +58,23 @@ void main() {
       expect(find.text('00:00'), findsOneWidget);
       expect(find.text('.00'), findsOneWidget);
       expect(find.text('Lap 01'), findsNothing);
+    });
+
+    testWidgets('swiping switches between digital and analog displays',
+        (tester) async {
+      await tester.pumpWidget(createTestWidget());
+
+      expect(find.byType(DigitalDisplay), findsOneWidget);
+
+      await tester.fling(find.byType(PageView), const Offset(-500, 0), 1000);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AnalogDisplay), findsOneWidget);
+
+      await tester.fling(find.byType(PageView), const Offset(500, 0), 1000);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DigitalDisplay), findsOneWidget);
     });
   });
 }
