@@ -19,6 +19,8 @@ class StopwatchViewModel extends ChangeNotifier {
   Timer? _timer;
   StopwatchStatus _status = StopwatchStatus.initial;
   final List<Lap> _laps = [];
+  int? _fastestLapNumber;
+  int? _slowestLapNumber;
 
   StopwatchStatus get status => _status;
 
@@ -48,27 +50,9 @@ class StopwatchViewModel extends ChangeNotifier {
     );
   }
 
-  int? get fastestLapNumber {
-    if (_laps.length < 2) return null;
-    Lap fastest = _laps.first;
-    for (final lap in _laps) {
-      if (lap.lapDuration < fastest.lapDuration) {
-        fastest = lap;
-      }
-    }
-    return fastest.lapNumber;
-  }
+  int? get fastestLapNumber => _fastestLapNumber;
 
-  int? get slowestLapNumber {
-    if (_laps.length < 2) return null;
-    Lap slowest = _laps.first;
-    for (final lap in _laps) {
-      if (lap.lapDuration > slowest.lapDuration) {
-        slowest = lap;
-      }
-    }
-    return slowest.lapNumber;
-  }
+  int? get slowestLapNumber => _slowestLapNumber;
 
   String get formattedMinutes {
     final minutes = elapsed.inMinutes;
@@ -96,9 +80,13 @@ class StopwatchViewModel extends ChangeNotifier {
   void start() {
     if (_status == StopwatchStatus.running) return;
 
+    _timer?.cancel();
     _stopwatch.start();
     _status = StopwatchStatus.running;
-    _timer = Timer.periodic(tickInterval, (_) => notifyListeners());
+    _timer = Timer.periodic(tickInterval, (_) {
+      if (!hasListeners) return;
+      notifyListeners();
+    });
     notifyListeners();
   }
 
@@ -128,6 +116,7 @@ class StopwatchViewModel extends ChangeNotifier {
     );
 
     _laps.insert(0, lap);
+    _updateLapStats();
     notifyListeners();
   }
 
@@ -138,7 +127,32 @@ class StopwatchViewModel extends ChangeNotifier {
     _timer = null;
     _status = StopwatchStatus.initial;
     _laps.clear();
+    _fastestLapNumber = null;
+    _slowestLapNumber = null;
     notifyListeners();
+  }
+
+  void _updateLapStats() {
+    if (_laps.length < 2) {
+      _fastestLapNumber = null;
+      _slowestLapNumber = null;
+      return;
+    }
+
+    Lap fastest = _laps.first;
+    Lap slowest = _laps.first;
+
+    for (final lap in _laps) {
+      if (lap.lapDuration < fastest.lapDuration) {
+        fastest = lap;
+      }
+      if (lap.lapDuration > slowest.lapDuration) {
+        slowest = lap;
+      }
+    }
+
+    _fastestLapNumber = fastest.lapNumber;
+    _slowestLapNumber = slowest.lapNumber;
   }
 
   @override

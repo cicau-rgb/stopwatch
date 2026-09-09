@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:stopwatch_app/core/theme/app_theme.dart';
-import 'package:stopwatch_app/ui/features/stopwatch/models/lap.dart';
 import 'package:stopwatch_app/ui/features/stopwatch/view_models/stopwatch_view_model.dart';
 
 class LapListView extends StatelessWidget {
@@ -19,13 +18,10 @@ class LapListView extends StatelessWidget {
 
     final currentLap = viewModel.currentLap;
     final recordedLaps = viewModel.laps;
+    final hasCurrentLap = currentLap != null;
+    final totalItemCount = recordedLaps.length + (hasCurrentLap ? 1 : 0);
     final fastestLapNumber = viewModel.fastestLapNumber;
     final slowestLapNumber = viewModel.slowestLapNumber;
-
-    final allDisplayLaps = <Lap>[
-      ?currentLap,
-      ...recordedLaps,
-    ];
 
     return Column(
       children: [
@@ -73,15 +69,17 @@ class LapListView extends StatelessWidget {
           child: ListView.separated(
             key: const Key('lap_list_view'),
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-            itemCount: allDisplayLaps.length,
+            itemCount: totalItemCount,
             separatorBuilder: (context, index) => const Divider(
               color: AppTheme.surfaceElevated,
               height: 1,
               thickness: 0.5,
             ),
             itemBuilder: (context, index) {
-              final lap = allDisplayLaps[index];
-              final isLiveLap = index == 0 && currentLap != null;
+              final isLiveLap = hasCurrentLap && index == 0;
+              final lap = isLiveLap
+                  ? currentLap
+                  : recordedLaps[hasCurrentLap ? index - 1 : index];
 
               Color timeColor = AppTheme.textPrimary;
               if (!isLiveLap) {
