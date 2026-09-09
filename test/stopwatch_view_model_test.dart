@@ -65,6 +65,8 @@ void main() {
       expect(viewModel.formattedHundredths, equals('00'));
       expect(viewModel.formattedMilliseconds, equals('000'));
       expect(viewModel.fullFormattedTime, equals('00:00.00'));
+      expect(viewModel.laps, isEmpty);
+      expect(viewModel.currentLap, isNull);
     });
 
     test('start transitions status to running', () {
@@ -73,6 +75,8 @@ void main() {
       expect(viewModel.isRunning, isTrue);
       expect(viewModel.isInitial, isFalse);
       expect(viewModel.isPaused, isFalse);
+      expect(viewModel.currentLap, isNotNull);
+      expect(viewModel.currentLap!.lapNumber, equals(1));
     });
 
     test('pause transitions status to paused', () {
@@ -96,16 +100,59 @@ void main() {
       expect(viewModel.isRunning, isTrue);
     });
 
-    test('reset clears time and transitions back to initial', () {
-      viewModel.start();
-      viewModel.pause();
-      viewModel.reset();
-      expect(viewModel.status, equals(StopwatchStatus.initial));
-      expect(viewModel.isInitial, isTrue);
-      expect(viewModel.fullFormattedTime, equals('00:00.00'));
+    test('recordLap when not running does nothing', () {
+      viewModel.recordLap();
+      expect(viewModel.laps, isEmpty);
     });
 
-    test('notifies listeners on start, pause, and reset', () {
+    test('records laps correctly with duration splits', () {
+      final fakeStopwatch = FakeStopwatch();
+      final vm = StopwatchViewModel(stopwatch: fakeStopwatch);
+
+      vm.start();
+
+      fakeStopwatch.setElapsed(const Duration(seconds: 10));
+      vm.recordLap();
+
+      expect(vm.laps.length, equals(1));
+      expect(vm.laps.first.lapNumber, equals(1));
+      expect(vm.laps.first.lapDuration, equals(const Duration(seconds: 10)));
+      expect(vm.laps.first.totalElapsed, equals(const Duration(seconds: 10)));
+
+      fakeStopwatch.setElapsed(const Duration(seconds: 25));
+      vm.recordLap();
+
+      expect(vm.laps.length, equals(2));
+      expect(vm.laps.first.lapNumber, equals(2));
+      expect(vm.laps.first.lapDuration, equals(const Duration(seconds: 15)));
+      expect(vm.laps.first.totalElapsed, equals(const Duration(seconds: 25)));
+
+      expect(vm.fastestLapNumber, equals(1));
+      expect(vm.slowestLapNumber, equals(2));
+
+      vm.dispose();
+    });
+
+    test('reset clears time, laps, and transitions back to initial', () {
+      final fakeStopwatch = FakeStopwatch();
+      final vm = StopwatchViewModel(stopwatch: fakeStopwatch);
+
+      vm.start();
+      fakeStopwatch.setElapsed(const Duration(seconds: 5));
+      vm.recordLap();
+      vm.pause();
+      vm.reset();
+
+      expect(vm.status, equals(StopwatchStatus.initial));
+      expect(vm.isInitial, isTrue);
+      expect(vm.fullFormattedTime, equals('00:00.00'));
+      expect(vm.laps, isEmpty);
+      expect(vm.currentLap, isNull);
+
+      vm.dispose();
+    });
+
+    test('notifies listeners on start, pause, reset, and recordLap', () {
       int notifyCount = 0;
       viewModel.addListener(() {
         notifyCount++;
@@ -115,8 +162,12 @@ void main() {
       expect(notifyCount, greaterThanOrEqualTo(1));
 
       final countAfterStart = notifyCount;
-      viewModel.pause();
+      viewModel.recordLap();
       expect(notifyCount, greaterThan(countAfterStart));
+
+      final countAfterLap = notifyCount;
+      viewModel.pause();
+      expect(notifyCount, greaterThan(countAfterLap));
 
       final countAfterPause = notifyCount;
       viewModel.reset();

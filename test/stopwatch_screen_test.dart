@@ -19,29 +19,43 @@ void main() {
       expect(find.text('00:00'), findsOneWidget);
       expect(find.text('.00'), findsOneWidget);
       expect(find.text('Start'), findsOneWidget);
-      expect(find.text('Reset'), findsOneWidget);
+      expect(find.text('Lap'), findsOneWidget);
+      expect(find.byKey(const Key('lap_button_disabled')), findsOneWidget);
     });
 
-    testWidgets('tapping Start changes control to Pause and ticks time', (tester) async {
+    testWidgets('tapping Start changes control to Pause, enables Lap, and records laps',
+        (tester) async {
       await tester.pumpWidget(createTestWidget());
 
       await tester.tap(find.byKey(const Key('start_button')));
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Pause'), findsOneWidget);
-      expect(find.text('Start'), findsNothing);
+      expect(find.byKey(const Key('lap_button')), findsOneWidget);
+      expect(find.text('LAP'), findsOneWidget);
+      expect(find.text('LAP TIME'), findsOneWidget);
+      expect(find.text('TOTAL'), findsOneWidget);
+      expect(find.text('Lap 01'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('lap_button')));
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.text('Lap 02'), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('pause_button')));
       await tester.pump();
 
       expect(find.text('Resume'), findsOneWidget);
+      expect(find.byKey(const Key('reset_button')), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('reset_button')));
       await tester.pump();
 
       expect(find.text('Start'), findsOneWidget);
+      expect(find.byKey(const Key('lap_button_disabled')), findsOneWidget);
       expect(find.text('00:00'), findsOneWidget);
       expect(find.text('.00'), findsOneWidget);
+      expect(find.text('Lap 01'), findsNothing);
     });
   });
 }
