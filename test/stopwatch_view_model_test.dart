@@ -130,6 +130,15 @@ void main() {
       expect(vm.fastestLapNumber, equals(1));
       expect(vm.slowestLapNumber, equals(2));
 
+      fakeStopwatch.setElapsed(const Duration(seconds: 30));
+      vm.recordLap();
+
+      expect(vm.laps.length, equals(3));
+      expect(vm.laps.first.lapNumber, equals(3));
+      expect(vm.laps.first.lapDuration, equals(const Duration(seconds: 5)));
+      expect(vm.fastestLapNumber, equals(3));
+      expect(vm.slowestLapNumber, equals(2));
+
       vm.dispose();
     });
 
