@@ -29,7 +29,7 @@ class AnalogDisplay extends StatelessWidget {
         width: 220.0,
         height: 220.0,
         child: AnalogClock(
-          key: const Key('analog_clock_widget'),
+          key: ValueKey(elapsed),
           decoration: BoxDecoration(
             border: Border.all(width: 2.0, color: AppTheme.surfaceElevated),
             color: AppTheme.surface,

@@ -1,3 +1,4 @@
+import 'package:analog_clock/analog_clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stopwatch_app/core/theme/app_theme.dart';
@@ -17,24 +18,42 @@ void main() {
       );
 
       expect(find.byType(AnalogDisplay), findsOneWidget);
-      expect(find.byKey(const Key('analog_clock_widget')), findsOneWidget);
+      expect(find.byType(AnalogClock), findsOneWidget);
     });
 
-    testWidgets('renders AnalogDisplay with non-zero elapsed time',
+    testWidgets('updates datetime when reset to zero elapsed time',
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.darkTheme,
           home: const Scaffold(
             body: AnalogDisplay(
-              elapsed: Duration(minutes: 5, seconds: 30, milliseconds: 500),
+              elapsed: Duration(minutes: 5, seconds: 30),
             ),
           ),
         ),
       );
 
-      expect(find.byType(AnalogDisplay), findsOneWidget);
-      expect(find.byKey(const Key('analog_clock_widget')), findsOneWidget);
+      final clockBeforeReset =
+          tester.widget<AnalogClock>(find.byType(AnalogClock));
+      expect(clockBeforeReset.datetime?.second, equals(30));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.darkTheme,
+          home: const Scaffold(
+            body: AnalogDisplay(
+              elapsed: Duration.zero,
+            ),
+          ),
+        ),
+      );
+
+      final clockAfterReset =
+          tester.widget<AnalogClock>(find.byType(AnalogClock));
+      expect(clockAfterReset.datetime?.second, equals(0));
+      expect(clockAfterReset.datetime?.minute, equals(0));
+      expect(clockAfterReset.datetime?.hour, equals(0));
     });
   });
 }
