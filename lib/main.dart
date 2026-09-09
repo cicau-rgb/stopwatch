@@ -1,9 +1,21 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 import 'ui/features/stopwatch/views/stopwatch_screen.dart';
 
 void main() {
   runApp(const MainApp());
+}
+
+class AppScrollBehavior extends MaterialScrollBehavior {
+  const AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+      };
 }
 
 class MainApp extends StatelessWidget {
@@ -14,6 +26,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       title: 'Stopwatch',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const AppScrollBehavior(),
       theme: AppTheme.darkTheme,
       home: const StopwatchScreen(),
     );

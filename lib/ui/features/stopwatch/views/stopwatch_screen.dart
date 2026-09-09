@@ -103,15 +103,31 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(2, (index) {
                       final isSelected = _currentPage == index;
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                        width: isSelected ? 8.0 : 6.0,
-                        height: isSelected ? 8.0 : 6.0,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isSelected
-                              ? AppTheme.textPrimary
-                              : AppTheme.textMuted.withValues(alpha: 0.5),
+                      return GestureDetector(
+                        key: Key('page_indicator_$index'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          _pageController.animateToPage(
+                            index,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6.0,
+                            vertical: 8.0,
+                          ),
+                          child: Container(
+                            width: isSelected ? 8.0 : 6.0,
+                            height: isSelected ? 8.0 : 6.0,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isSelected
+                                  ? AppTheme.textPrimary
+                                  : AppTheme.textMuted.withValues(alpha: 0.5),
+                            ),
+                          ),
                         ),
                       );
                     }),

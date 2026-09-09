@@ -76,5 +76,22 @@ void main() {
 
       expect(find.byType(DigitalDisplay), findsOneWidget);
     });
+
+    testWidgets('tapping page indicator dots switches between clock displays',
+        (tester) async {
+      await tester.pumpWidget(createTestWidget());
+
+      expect(find.byType(DigitalDisplay), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('page_indicator_1')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AnalogDisplay), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('page_indicator_0')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DigitalDisplay), findsOneWidget);
+    });
   });
 }
