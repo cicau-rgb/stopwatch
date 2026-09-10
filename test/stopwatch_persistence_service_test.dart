@@ -56,5 +56,17 @@ void main() {
       final snapshot = await service.loadSnapshot();
       expect(snapshot, isNull);
     });
+
+    test('loadSnapshot safely falls back to empty laps on corrupted JSON',
+        () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('stopwatch_elapsed_ms', 5000);
+      await prefs.setString('stopwatch_laps_json', '{not-a-valid-json}');
+
+      final snapshot = await service.loadSnapshot();
+      expect(snapshot, isNotNull);
+      expect(snapshot!.elapsed, equals(const Duration(seconds: 5)));
+      expect(snapshot.laps, isEmpty);
+    });
   });
 }

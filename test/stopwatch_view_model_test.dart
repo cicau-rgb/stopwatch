@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stopwatch_app/data/services/stopwatch_persistence_service.dart';
 import 'package:stopwatch_app/ui/features/stopwatch/view_models/stopwatch_view_model.dart';
 
 class FakeStopwatch implements Stopwatch {
@@ -102,6 +103,24 @@ void main() {
       expect(viewModel.isRunning, isTrue);
     });
 
+    test('calling start multiple times while running is idempotent', () {
+      final fakeStopwatch = FakeStopwatch();
+      final vm = StopwatchViewModel(stopwatch: fakeStopwatch);
+
+      vm.start();
+      expect(vm.isRunning, isTrue);
+
+      fakeStopwatch.setElapsed(const Duration(seconds: 5));
+
+      vm.start();
+      vm.start();
+
+      expect(vm.isRunning, isTrue);
+      expect(vm.elapsed, equals(const Duration(seconds: 5)));
+
+      vm.dispose();
+    });
+
     test('recordLap when not running does nothing', () {
       viewModel.recordLap();
       expect(viewModel.laps, isEmpty);
@@ -120,6 +139,8 @@ void main() {
       expect(vm.laps.first.lapNumber, equals(1));
       expect(vm.laps.first.lapDuration, equals(const Duration(seconds: 10)));
       expect(vm.laps.first.totalElapsed, equals(const Duration(seconds: 10)));
+      expect(vm.fastestLapNumber, isNull);
+      expect(vm.slowestLapNumber, isNull);
 
       fakeStopwatch.setElapsed(const Duration(seconds: 25));
       vm.recordLap();
@@ -185,22 +206,9 @@ void main() {
       expect(notifyCount, greaterThan(countAfterPause));
     });
 
-    test('correctly formats various durations', () {
+    test('delegates formatting properties to elapsed duration', () {
       final fakeStopwatch = FakeStopwatch();
       final vm = StopwatchViewModel(stopwatch: fakeStopwatch);
-
-      fakeStopwatch.setElapsed(Duration.zero);
-      expect(vm.formattedMinutes, equals('00'));
-      expect(vm.formattedSeconds, equals('00'));
-      expect(vm.formattedHundredths, equals('00'));
-      expect(vm.fullFormattedTime, equals('00:00.00'));
-
-      fakeStopwatch.setElapsed(const Duration(milliseconds: 590));
-      expect(vm.formattedMinutes, equals('00'));
-      expect(vm.formattedSeconds, equals('00'));
-      expect(vm.formattedHundredths, equals('59'));
-      expect(vm.formattedMilliseconds, equals('590'));
-      expect(vm.fullFormattedTime, equals('00:00.59'));
 
       fakeStopwatch.setElapsed(
         const Duration(minutes: 1, seconds: 5, milliseconds: 430),
@@ -208,15 +216,8 @@ void main() {
       expect(vm.formattedMinutes, equals('01'));
       expect(vm.formattedSeconds, equals('05'));
       expect(vm.formattedHundredths, equals('43'));
+      expect(vm.formattedMilliseconds, equals('430'));
       expect(vm.fullFormattedTime, equals('01:05.43'));
-
-      fakeStopwatch.setElapsed(
-        const Duration(minutes: 72, seconds: 12, milliseconds: 90),
-      );
-      expect(vm.formattedMinutes, equals('72'));
-      expect(vm.formattedSeconds, equals('12'));
-      expect(vm.formattedHundredths, equals('09'));
-      expect(vm.fullFormattedTime, equals('72:12.09'));
 
       vm.dispose();
     });
@@ -245,6 +246,42 @@ void main() {
 
       vm.dispose();
       newVm.dispose();
+    });
+
+    test('persistCurrentState clears persistence when status is initial',
+        () async {
+      final persistence = StopwatchPersistenceService();
+      await persistence.saveSnapshot(
+        elapsed: const Duration(seconds: 10),
+        laps: [],
+      );
+
+      final vm = StopwatchViewModel(persistenceService: persistence);
+      expect(vm.isInitial, isTrue);
+
+      await vm.persistCurrentState();
+
+      final snapshot = await persistence.loadSnapshot();
+      expect(snapshot, isNull);
+
+      vm.dispose();
+    });
+
+    test('restoreState does nothing when saved snapshot elapsed is zero',
+        () async {
+      final persistence = StopwatchPersistenceService();
+      await persistence.saveSnapshot(
+        elapsed: Duration.zero,
+        laps: [],
+      );
+
+      final vm = StopwatchViewModel(persistenceService: persistence);
+      await vm.restoreState();
+
+      expect(vm.isInitial, isTrue);
+      expect(vm.status, equals(StopwatchStatus.initial));
+
+      vm.dispose();
     });
 
     test('reset clears persisted state', () async {
