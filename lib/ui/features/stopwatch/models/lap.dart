@@ -1,10 +1,12 @@
+import '../../../../core/extensions/duration_extensions.dart';
+
 class Lap {
   Lap({
     required this.lapNumber,
     required this.lapDuration,
     required this.totalElapsed,
-  })  : formattedLapDuration = formatDuration(lapDuration),
-        formattedTotalElapsed = formatDuration(totalElapsed);
+  })  : formattedLapDuration = lapDuration.toStopwatchString,
+        formattedTotalElapsed = totalElapsed.toStopwatchString;
 
   final int lapNumber;
   final Duration lapDuration;
@@ -12,13 +14,7 @@ class Lap {
   final String formattedLapDuration;
   final String formattedTotalElapsed;
 
-  static String formatDuration(Duration duration) {
-    final minutes = duration.inMinutes.toString().padLeft(2, '0');
-    final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
-    final hundredths =
-        ((duration.inMilliseconds % 1000) ~/ 10).toString().padLeft(2, '0');
-    return '$minutes:$seconds.$hundredths';
-  }
+  static String formatDuration(Duration duration) => duration.toStopwatchString;
 
   Map<String, dynamic> toJson() => {
         'lapNumber': lapNumber,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:stopwatch_app/core/extensions/duration_extensions.dart';
 import 'package:stopwatch_app/data/services/stopwatch_persistence_service.dart';
 import '../models/lap.dart';
 
@@ -60,28 +61,15 @@ class StopwatchViewModel extends ChangeNotifier {
 
   int? get slowestLapNumber => _slowestLapNumber;
 
-  String get formattedMinutes {
-    final minutes = elapsed.inMinutes;
-    return minutes.toString().padLeft(2, '0');
-  }
+  String get formattedMinutes => elapsed.formattedMinutes;
 
-  String get formattedSeconds {
-    final seconds = elapsed.inSeconds % 60;
-    return seconds.toString().padLeft(2, '0');
-  }
+  String get formattedSeconds => elapsed.formattedSeconds;
 
-  String get formattedHundredths {
-    final hundredths = (elapsed.inMilliseconds % 1000) ~/ 10;
-    return hundredths.toString().padLeft(2, '0');
-  }
+  String get formattedHundredths => elapsed.formattedHundredths;
 
-  String get formattedMilliseconds {
-    final ms = elapsed.inMilliseconds % 1000;
-    return ms.toString().padLeft(3, '0');
-  }
+  String get formattedMilliseconds => elapsed.formattedMilliseconds;
 
-  String get fullFormattedTime =>
-      '$formattedMinutes:$formattedSeconds.$formattedHundredths';
+  String get fullFormattedTime => elapsed.toStopwatchString;
 
   void start() {
     if (_status == StopwatchStatus.running) return;
