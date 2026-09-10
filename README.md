@@ -1,59 +1,31 @@
-# Minimalist Flutter Stopwatch
+# Stopwatch
 
-A high-performance, minimalist stopwatch application built with **Flutter** and **Dart**, featuring precision timekeeping, split lap tracking with dynamic highlighting, an analog clock display with smooth hand synchronization, and local state persistence.
+A stopwatch application built with Flutter, featuring digital and analog clock displays, lap tracking with split comparisons, and state persistence.
 
----
+## Screenshots
 
-## 📱 Screenshots
-
-| Digital Clock (Running) | Multi-Lap Recording | Paused & Resume Controls |
+| Digital Display | Lap Tracking | Paused State |
 | :---: | :---: | :---: |
 | <img src="docs/screenshots/01_digital_running.png" width="260" alt="Digital Stopwatch Running" /> | <img src="docs/screenshots/03_laps_highlighted.png" width="260" alt="Recorded Laps Highlighted" /> | <img src="docs/screenshots/04_paused_state.png" width="260" alt="Paused State" /> |
 
-| Analog Clock (Paused) | Analog Clock (Running) | Live Lap Split |
+| Analog Dial (Paused) | Analog Dial (Running) | Live Lap Split |
 | :---: | :---: | :---: |
 | <img src="docs/screenshots/05_analog_paused.png" width="260" alt="Analog Clock Paused" /> | <img src="docs/screenshots/06_analog_running.png" width="260" alt="Analog Clock Running" /> | <img src="docs/screenshots/02_first_lap.png" width="260" alt="First Lap Live" /> |
 
----
+## Features
 
-## 🚀 Features & Implemented Functionality
+- **Timekeeping**: Monotonic timing based on Dart's `Stopwatch` class with 30 ms UI tick rate and tabular figure typography.
+- **Dual Display**: Switch between digital (`MM:SS.ss`) and analog dial via swipe or page indicator.
+- **Lap Tracking**: Records lap splits and cumulative elapsed time. When two or more laps are recorded, the fastest and slowest laps are highlighted.
+- **State Persistence**: Saves current elapsed time and recorded laps to local storage (`SharedPreferences`) on app exit or backgrounding, restoring them in a paused state on restart.
 
-### 1. Precision Timekeeping & Core Controls
-- **Monotonic Clock**: Built on `dart:core` `Stopwatch` and `DateTime` tracking to ensure monotonic accuracy immune to system clock shifts.
-- **Dynamic Controls**:
-  - **Initial**: `Start` (enabled, green accent) and `Lap` (disabled).
-  - **Running**: Transforms to `Pause` (orange accent) and `Lap` (active).
-  - **Paused**: Transforms to `Resume` (green accent) and `Reset` (gray/surface).
-- **Tabular Figures Typography**: Uses OpenType `FontFeature.tabularFigures()` on all clock digits, ensuring equal character width and eliminating digit jitter during 30+ FPS ticking.
+## Architecture
 
-### 2. Dual Clock Display (Digital & Analog)
-- **Digital Display**: Minimalist `MM:SS.ss` format with prominent minute/second numerals and secondary hundredths text.
-- **Analog Clock**: Visual dial with synchronized hour, minute, and second hands that move in real-time with the elapsed stopwatch time. Hand accent colors dynamically adjust between running (green) and paused (orange).
-- **Interactive Navigation**: Horizontal `PageView` switchable via touch swipe, desktop mouse drag, trackpad, or by tapping the interactive page indicator dots.
-
-### 3. Real-Time Lap Tracking & Highlighting
-- **Split Duration & Cumulative Total**: Records the exact split duration between laps as well as the total elapsed stopwatch time.
-- **Live Active Lap**: The current running lap dynamically increments in real-time at the top of the lap list.
-- **Visual Performance Highlights**: Once 2 or more laps are recorded, the app automatically identifies and highlights:
-  - 🟢 **Fastest Lap** in green accent.
-  - 🔴 **Slowest Lap** in orange/red accent.
-- **Pre-computed Formatting**: Lap durations are formatted on creation and cached in immutable `Lap` models, preventing per-frame string allocations during scrolling.
-
-### 4. State Persistence (Freeze & Restore)
-- **Automatic Snapshot**: An `AppLifecycleListener` catches application close, backgrounding, minifying, and OS exit signals.
-- **Zero Loss**: When closed while running, the stopwatch freezes the exact elapsed duration and commits the full lap list to disk via `SharedPreferences`.
-- **Paused Restoration**: Upon relaunch, the app restores cleanly in a paused state showing the frozen time and complete lap history.
-- **Clean Reset**: Tapping "Reset" wipes the stored snapshot and returns to `00:00.00`.
-
----
-
-## 🏗️ Architecture & Component Diagram
-
-The project follows a layered **Model-View-ViewModel (MVVM)** architecture with clean separation of concerns and unidirectional data flow:
+The application follows an MVVM architecture with unidirectional data flow:
 
 ```mermaid
 graph TD
-    subgraph Presentation ["Presentation Layer (Views & Widgets)"]
+    subgraph Presentation ["Presentation"]
         Screen["StopwatchScreen"]
         Digital["DigitalDisplay"]
         Analog["AnalogDisplay"]
@@ -70,126 +42,97 @@ graph TD
         LapList --> LapItem
     end
 
-    subgraph Logic ["Logic Layer (MVVM)"]
+    subgraph Logic ["Logic"]
         VM["StopwatchViewModel"]
-        LapModel["Lap (Domain Model)"]
+        LapModel["Lap"]
         
         VM --> LapModel
     end
 
-    subgraph Data ["Data & Persistence Layer"]
+    subgraph Data ["Data"]
         Persistence["StopwatchPersistenceService"]
         SharedPrefs[("SharedPreferences")]
         
         Persistence --> SharedPrefs
     end
 
-    subgraph Core ["Core Utilities & Theme"]
+    subgraph Core ["Core"]
         Theme["AppTheme"]
         Scroll["AppScrollBehavior"]
-        Formatting["DurationFormatting Extension"]
+        Formatting["DurationFormatting"]
     end
 
-    Screen -- Listens via ListenableBuilder --> VM
-    Controls -- Dispatches user actions --> VM
-    VM -- Persists snapshots --> Persistence
+    Screen -- Listens to --> VM
+    Controls -- User actions --> VM
+    VM -- Saves state --> Persistence
     Digital -. Formats via .-> Formatting
     LapItem -. Formats via .-> Formatting
     VM -. Formats via .-> Formatting
-    Screen -. Theme styling .-> Theme
+    Screen -. Theme .-> Theme
     Screen -. Drag gestures .-> Scroll
 ```
 
-### Component Roles
-- **`StopwatchScreen`**: Top-level scaffold hosting the `PageView`, interactive `ClockPageIndicator`, controls, and lifecycle hooks.
-- **`StopwatchViewModel`**: `ChangeNotifier` managing the monotonic clock, periodic ticker, lap statistics, and persistence dispatch.
-- **`ClockPageIndicator`**: Isolated widget handling animated dot indicators and page animation.
-- **`LapRow`**: Focused widget rendering individual lap split items with tabular typography and performance highlights.
-- **`DurationFormatting`**: Centralized extension on `Duration` serving as the Single Source of Truth for all time formatting.
-- **`StopwatchPersistenceService`**: Handles JSON serialization and asynchronous I/O with `SharedPreferences`.
-
----
-
-## 📂 Project Structure
+## Project Structure
 
 ```text
 lib/
 ├── core/
 │   ├── extensions/
-│   │   └── duration_extensions.dart   # Shared duration formatting extension
+│   │   └── duration_extensions.dart
 │   └── theme/
-│       ├── app_scroll_behavior.dart   # Touch, mouse & trackpad drag gestures
-│       └── app_theme.dart             # Minimalist dark theme palette & typography
+│       ├── app_scroll_behavior.dart
+│       └── app_theme.dart
 ├── data/
 │   └── services/
-│       └── stopwatch_persistence_service.dart  # SharedPreferences snapshot storage
-├── main.dart                          # Application entrypoint & MaterialApp setup
+│       └── stopwatch_persistence_service.dart
+├── main.dart
 └── ui/
     └── features/
         └── stopwatch/
             ├── models/
-            │   └── lap.dart           # Immutable Lap model with JSON serialization
+            │   └── lap.dart
             ├── view_models/
-            │   └── stopwatch_view_model.dart  # Reactive stopwatch state & lap logic
+            │   └── stopwatch_view_model.dart
             └── views/
-                ├── stopwatch_screen.dart      # Main screen & lifecycle listener
+                ├── stopwatch_screen.dart
                 └── widgets/
-                    ├── analog_display.dart        # Synchronized analog clock dial
-                    ├── clock_page_indicator.dart  # Interactive dot indicators
-                    ├── digital_display.dart       # MM:SS.ss digital typography
-                    ├── lap_list_view.dart         # Scrollable lap history list
-                    ├── lap_row.dart               # Individual lap row item
-                    └── stopwatch_controls.dart    # Start, Pause, Resume, Reset, Lap
+                    ├── analog_display.dart
+                    ├── clock_page_indicator.dart
+                    ├── digital_display.dart
+                    ├── lap_list_view.dart
+                    ├── lap_row.dart
+                    └── stopwatch_controls.dart
 ```
 
----
+## Testing
 
-## 🧪 Testing & Verification
-
-The project includes unit and widget tests:
+Run unit and widget tests:
 
 ```bash
-# Run all unit and widget tests
 flutter test
+```
 
-# Run static analysis
+Run static analysis:
+
+```bash
 dart analyze
 ```
 
-### Test Coverage Highlights
-- **ViewModel Tests**: Initial idle state, start/pause/resume/reset state transitions, lap calculation with split durations, fastest/slowest lap detection, formatted getters, and persistence save/restore/clear.
-- **Widget Tests**: Initial `00:00.00` rendering, button interaction flows, `PageView` swiping and dot tapping between digital and analog displays, analog second hand synchronization on reset, and cold launch state restoration.
-- **Extension Tests**: Zero duration, sub-second centiseconds, multi-minute, and multi-hour string formatting.
-
----
-
-## 🛠️ Getting Started
+## Getting Started
 
 ### Prerequisites
-- [Flutter SDK](https://flutter.dev/docs/get-started/install) (3.x or higher)
-- [Dart SDK](https://dart.dev/get-dart) (3.x or higher)
 
-### Installation & Run
+- Flutter SDK (3.x or higher)
 
-1. **Clone the repository**:
-   ```bash
-   git clone <repository_url>
-   cd stopwatch_app
-   ```
+### Run Application
 
-2. **Install dependencies**:
-   ```bash
-   flutter pub get
-   ```
+```bash
+# Desktop (Linux / macOS / Windows)
+flutter run -d linux
 
-3. **Run on Desktop (Linux / macOS / Windows)**:
-   ```bash
-   flutter run -d linux
-   ```
+# Web
+flutter run -d chrome
 
-4. **Run on Mobile / Web Server**:
-   ```bash
-   # Launch web development server accessible across local Wi-Fi
-   flutter run -d web-server --web-port=8080 --web-hostname=0.0.0.0
-   ```
-   Open `http://localhost:8080` on your PC, or `http://<your-local-ip>:8080` in your mobile browser.
+# Web server (accessible across local network)
+flutter run -d web-server --web-port=8080 --web-hostname=0.0.0.0
+```
