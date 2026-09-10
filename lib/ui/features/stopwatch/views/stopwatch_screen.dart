@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:stopwatch_app/core/theme/app_theme.dart';
 import 'package:stopwatch_app/ui/features/stopwatch/view_models/stopwatch_view_model.dart';
 import 'widgets/analog_display.dart';
+import 'widgets/clock_page_indicator.dart';
 import 'widgets/digital_display.dart';
 import 'widgets/lap_list_view.dart';
 import 'widgets/stopwatch_controls.dart';
@@ -105,43 +106,9 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
             ),
             Padding(
               padding: const EdgeInsets.only(top: 4.0, bottom: 16.0),
-              child: ValueListenableBuilder<int>(
-                valueListenable: _currentPageNotifier,
-                builder: (context, currentPage, _) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(2, (index) {
-                      final isSelected = currentPage == index;
-                      return GestureDetector(
-                        key: Key('page_indicator_$index'),
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          _pageController.animateToPage(
-                            index,
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6.0,
-                            vertical: 8.0,
-                          ),
-                          child: Container(
-                            width: isSelected ? 8.0 : 6.0,
-                            height: isSelected ? 8.0 : 6.0,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isSelected
-                                  ? AppTheme.textPrimary
-                                  : AppTheme.textMuted.withValues(alpha: 0.5),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                  );
-                },
+              child: ClockPageIndicator(
+                pageController: _pageController,
+                currentPageNotifier: _currentPageNotifier,
               ),
             ),
             Padding(

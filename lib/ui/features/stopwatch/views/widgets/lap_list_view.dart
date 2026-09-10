@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stopwatch_app/core/theme/app_theme.dart';
 import 'package:stopwatch_app/ui/features/stopwatch/view_models/stopwatch_view_model.dart';
+import 'lap_row.dart';
 
 class LapListView extends StatelessWidget {
   const LapListView({
@@ -81,50 +82,11 @@ class LapListView extends StatelessWidget {
                   ? currentLap
                   : recordedLaps[hasCurrentLap ? index - 1 : index];
 
-              Color timeColor = AppTheme.textPrimary;
-              if (!isLiveLap) {
-                if (lap.lapNumber == fastestLapNumber) {
-                  timeColor = AppTheme.startAccent;
-                } else if (lap.lapNumber == slowestLapNumber) {
-                  timeColor = AppTheme.pauseAccent;
-                }
-              }
-
-              final lapLabel = 'Lap ${lap.lapNumber.toString().padLeft(2, '0')}';
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      lapLabel,
-                      style: TextStyle(
-                        color: isLiveLap ? AppTheme.textSecondary : AppTheme.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    Text(
-                      lap.formattedLapDuration,
-                      style: TextStyle(
-                        color: timeColor,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                    Text(
-                      lap.formattedTotalElapsed,
-                      style: TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
+              return LapRow(
+                lap: lap,
+                isLiveLap: isLiveLap,
+                isFastest: !isLiveLap && lap.lapNumber == fastestLapNumber,
+                isSlowest: !isLiveLap && lap.lapNumber == slowestLapNumber,
               );
             },
           ),
