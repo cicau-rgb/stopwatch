@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:stopwatch_app/core/theme/app_theme.dart';
 import 'package:stopwatch_app/ui/features/stopwatch/view_models/stopwatch_view_model.dart';
@@ -22,6 +23,7 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
   late final StopwatchViewModel _viewModel;
   late final PageController _pageController;
   late final ValueNotifier<int> _currentPageNotifier;
+  late final AppLifecycleListener _lifecycleListener;
   bool _ownsViewModel = false;
 
   @override
@@ -35,10 +37,21 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
       _viewModel = StopwatchViewModel();
       _ownsViewModel = true;
     }
+    _lifecycleListener = AppLifecycleListener(
+      onPause: _viewModel.persistCurrentState,
+      onHide: _viewModel.persistCurrentState,
+      onDetach: _viewModel.persistCurrentState,
+      onExitRequested: () async {
+        await _viewModel.persistCurrentState();
+        return AppExitResponse.exit;
+      },
+    );
+    _viewModel.restoreState();
   }
 
   @override
   void dispose() {
+    _lifecycleListener.dispose();
     _pageController.dispose();
     _currentPageNotifier.dispose();
     if (_ownsViewModel) {
@@ -135,7 +148,8 @@ class _StopwatchScreenState extends State<StopwatchScreen> {
               padding: const EdgeInsets.only(bottom: 20.0),
               child: ListenableBuilder(
                 listenable: _viewModel,
-                builder: (context, _) => StopwatchControls(viewModel: _viewModel),
+                builder: (context, _) =>
+                    StopwatchControls(viewModel: _viewModel),
               ),
             ),
             Expanded(

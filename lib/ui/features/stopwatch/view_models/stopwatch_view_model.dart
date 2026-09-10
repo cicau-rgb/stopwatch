@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:stopwatch_app/data/services/stopwatch_persistence_service.dart';
 import '../models/lap.dart';
 
 enum StopwatchStatus {
@@ -11,12 +12,17 @@ enum StopwatchStatus {
 class StopwatchViewModel extends ChangeNotifier {
   StopwatchViewModel({
     Stopwatch? stopwatch,
+    StopwatchPersistenceService? persistenceService,
     this.tickInterval = const Duration(milliseconds: 30),
-  })  : _stopwatch = stopwatch ?? Stopwatch();
+  })  : _stopwatch = stopwatch ?? Stopwatch(),
+        _persistenceService =
+            persistenceService ?? StopwatchPersistenceService();
 
   final Stopwatch _stopwatch;
+  final StopwatchPersistenceService _persistenceService;
   final Duration tickInterval;
   Timer? _timer;
+  Duration _elapsedOffset = Duration.zero;
   StopwatchStatus _status = StopwatchStatus.initial;
   final List<Lap> _laps = [];
   int? _fastestLapNumber;
@@ -30,7 +36,7 @@ class StopwatchViewModel extends ChangeNotifier {
 
   bool get isInitial => _status == StopwatchStatus.initial;
 
-  Duration get elapsed => _stopwatch.elapsed;
+  Duration get elapsed => _elapsedOffset + _stopwatch.elapsed;
 
   List<Lap> get laps => List.unmodifiable(_laps);
 
@@ -94,6 +100,8 @@ class StopwatchViewModel extends ChangeNotifier {
     if (_status != StopwatchStatus.running) return;
 
     _stopwatch.stop();
+    _elapsedOffset += _stopwatch.elapsed;
+    _stopwatch.reset();
     _timer?.cancel();
     _timer = null;
     _status = StopwatchStatus.paused;
@@ -123,12 +131,40 @@ class StopwatchViewModel extends ChangeNotifier {
   void reset() {
     _stopwatch.stop();
     _stopwatch.reset();
+    _elapsedOffset = Duration.zero;
     _timer?.cancel();
     _timer = null;
     _status = StopwatchStatus.initial;
     _laps.clear();
     _fastestLapNumber = null;
     _slowestLapNumber = null;
+    _persistenceService.clear();
+    notifyListeners();
+  }
+
+  Future<void> persistCurrentState() async {
+    if (isInitial) {
+      await _persistenceService.clear();
+      return;
+    }
+    if (isRunning) {
+      pause();
+    }
+    await _persistenceService.saveSnapshot(
+      elapsed: elapsed,
+      laps: _laps,
+    );
+  }
+
+  Future<void> restoreState() async {
+    final snapshot = await _persistenceService.loadSnapshot();
+    if (snapshot == null || snapshot.elapsed == Duration.zero) return;
+
+    _elapsedOffset = snapshot.elapsed;
+    _status = StopwatchStatus.paused;
+    _laps.clear();
+    _laps.addAll(snapshot.laps);
+    _updateLapStats();
     notifyListeners();
   }
 
