@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stopwatch_app/ui/features/stopwatch/view_models/stopwatch_view_model.dart';
 
 class FakeStopwatch implements Stopwatch {
@@ -48,6 +49,7 @@ void main() {
     late StopwatchViewModel viewModel;
 
     setUp(() {
+      SharedPreferences.setMockInitialValues({});
       viewModel = StopwatchViewModel();
     });
 
@@ -217,6 +219,53 @@ void main() {
       expect(vm.fullFormattedTime, equals('72:12.09'));
 
       vm.dispose();
+    });
+
+    test('persistCurrentState pauses and saves state when running', () async {
+      final fakeStopwatch = FakeStopwatch();
+      final vm = StopwatchViewModel(stopwatch: fakeStopwatch);
+
+      vm.start();
+      fakeStopwatch.setElapsed(const Duration(seconds: 8));
+      vm.recordLap();
+
+      await vm.persistCurrentState();
+
+      expect(vm.isPaused, isTrue);
+      expect(vm.isRunning, isFalse);
+      expect(vm.elapsed, equals(const Duration(seconds: 8)));
+
+      final newVm = StopwatchViewModel();
+      await newVm.restoreState();
+
+      expect(newVm.isPaused, isTrue);
+      expect(newVm.elapsed, equals(const Duration(seconds: 8)));
+      expect(newVm.laps.length, equals(1));
+      expect(newVm.laps.first.lapNumber, equals(1));
+
+      vm.dispose();
+      newVm.dispose();
+    });
+
+    test('reset clears persisted state', () async {
+      final fakeStopwatch = FakeStopwatch();
+      final vm = StopwatchViewModel(stopwatch: fakeStopwatch);
+
+      vm.start();
+      fakeStopwatch.setElapsed(const Duration(seconds: 12));
+      await vm.persistCurrentState();
+
+      vm.reset();
+
+      final newVm = StopwatchViewModel();
+      await newVm.restoreState();
+
+      expect(newVm.isInitial, isTrue);
+      expect(newVm.elapsed, equals(Duration.zero));
+      expect(newVm.laps, isEmpty);
+
+      vm.dispose();
+      newVm.dispose();
     });
   });
 }

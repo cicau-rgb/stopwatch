@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:stopwatch_app/core/theme/app_theme.dart';
+import 'package:stopwatch_app/data/services/stopwatch_persistence_service.dart';
+import 'package:stopwatch_app/ui/features/stopwatch/models/lap.dart';
 import 'package:stopwatch_app/ui/features/stopwatch/views/stopwatch_screen.dart';
 import 'package:stopwatch_app/ui/features/stopwatch/views/widgets/analog_display.dart';
 import 'package:stopwatch_app/ui/features/stopwatch/views/widgets/digital_display.dart';
@@ -14,6 +17,9 @@ void main() {
   }
 
   group('StopwatchScreen Widget Tests', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
     testWidgets('renders initial 00:00.00 display and controls', (tester) async {
       await tester.pumpWidget(createTestWidget());
 
@@ -91,6 +97,30 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(DigitalDisplay), findsOneWidget);
+    });
+
+    testWidgets('restores saved paused state and laps on launch',
+        (tester) async {
+      final persistence = StopwatchPersistenceService();
+      await persistence.saveSnapshot(
+        elapsed: const Duration(seconds: 45, milliseconds: 670),
+        laps: [
+          Lap(
+            lapNumber: 1,
+            lapDuration: const Duration(seconds: 45, milliseconds: 670),
+            totalElapsed: const Duration(seconds: 45, milliseconds: 670),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('00:45'), findsOneWidget);
+      expect(find.text('.67'), findsOneWidget);
+      expect(find.text('Resume'), findsOneWidget);
+      expect(find.text('Reset'), findsOneWidget);
+      expect(find.text('Lap 01'), findsOneWidget);
     });
   });
 }
